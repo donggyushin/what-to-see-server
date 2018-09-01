@@ -120,6 +120,7 @@ passport.use(
 // Redirect the user to Facebook for authentication.  When complete,
 // Facebook will redirect the user back to the application at
 //     /auth/facebook/callback
+
 router.get("/facebook", passport.authenticate("facebook"));
 
 // Facebook will redirect the user to this URL after approval.  Finish the
@@ -144,54 +145,6 @@ router.post(
     failureFlash: true
   })
 );
-
-//로그인(test)
-// router.post("/login/", upload.array(), (req, res) => {
-//   const username = req.body.username;
-//   const password = req.body.password;
-//   const EncryptedPassword = sha256.x2(password);
-
-//   //username으로 유저찾기
-//   const sql = "SELECT password FROM user WHERE username = ?";
-//   const post = [username];
-
-//   mysql.query(sql, post, (err, results, fields) => {
-//     if (err) {
-//       console.log(err);
-//       return res.json({
-//         ok: false,
-//         error: "db error",
-//         status: 400
-//       });
-//     } else {
-//       //유저가 없다면,
-//       if (results.length === 0) {
-//         return res.json({
-//           ok: false,
-//           error: "no user",
-//           status: 400
-//         });
-//       }
-//       //유저가 존재한다면,
-//       const users_password = results[0].password;
-//       //비밀번호가 일치하지 않는다면,
-//       if (users_password !== EncryptedPassword) {
-//         return res.json({
-//           ok: false,
-//           error: "wrong password",
-//           status: 400
-//         });
-//       } else {
-//         //성공
-//         return res.json({
-//           ok: true,
-//           error: null,
-//           status: 200
-//         });
-//       }
-//     }
-//   });
-// });
 
 //회원가입
 router.post("/", upload.array(), (req, res) => {
@@ -225,11 +178,7 @@ router.post("/", upload.array(), (req, res) => {
 //logout
 router.get("/logout", (req, res) => {
   req.logOut();
-  return res.json({
-    ok: true,
-    error: null,
-    status: 200
-  });
+  res.redirect("/");
 });
 
 export default router;
