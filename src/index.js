@@ -6,6 +6,7 @@ import session from "express-session";
 var MySQLStore = require("express-mysql-session")(session);
 import storeOption from "./options/mysqlstoreopts";
 import dotenv from "dotenv";
+import passport from "passport";
 
 dotenv.config();
 
@@ -28,18 +29,22 @@ app.use(
     saveUninitialized: true
   })
 );
+app.use(passport.initialize());
+app.use(passport.session());
 
 //router
 app.use("/api", routes);
 
 app.get("/", (req, res) => {
-  const sql = "SHOW TABLES";
-  mysql.query(sql, (err, results, fields) => {
-    if (err) console.log(err);
-    console.log(results);
-  });
-  req.session.test = 1;
-  res.send("Hello world" + req.session.test);
+  if (req.isAuthenticated()) {
+    return res.json({
+      message: "login"
+    });
+  } else {
+    return res.json({
+      message: "fail"
+    });
+  }
 });
 
 app.listen(port, () => {
