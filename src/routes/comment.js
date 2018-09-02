@@ -6,6 +6,54 @@ import * as NotificationActions from "../utils/notification";
 const upload = multer();
 const router = express.Router();
 
+//대댓글 불러오기
+router.get("/reply/:commentId", (req, res) => {
+  const comment_id = req.params.commentId;
+
+  const sql =
+    "SELECT r.id, u.displayName, message FROM reply r JOIN user u ON r.writer = u.id WHERE r.comment = ?";
+  const post = [comment_id];
+  mysql.query(sql, post, (err, results, fields) => {
+    if (err) {
+      console.log(err);
+      return res.json({
+        ok: false,
+        status: 400,
+        error: "db error"
+      });
+    }
+    const replies = results;
+    return res.json({
+      ok: true,
+      replies
+    });
+  });
+});
+
+//댓글 불러오기
+router.get("/:movieId", (req, res) => {
+  const movie_id = req.params.movieId;
+
+  const sql = `SELECT c.id, u.displayName, c.message FROM comment c JOIN user u ON c.writer = u.id WHERE movie=?`;
+  const post = [movie_id];
+  mysql.query(sql, post, (err, results, fields) => {
+    if (err) {
+      console.log(err);
+      return res.json({
+        ok: false,
+        error: "db error",
+        status: 400
+      });
+    }
+    const comments = results;
+    return res.json({
+      ok: true,
+      comments
+    });
+  });
+});
+
+//대댓글 삭제하기
 router.delete("/reply/:replyId", (req, res) => {
   const me = req.user;
   const replyId = req.params.replyId;
