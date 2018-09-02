@@ -7,6 +7,7 @@ var MySQLStore = require("express-mysql-session")(session);
 import storeOption from "./options/mysqlstoreopts";
 import dotenv from "dotenv";
 import passport from "passport";
+import { dirname } from "path";
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 //router
+app.use("/", express.static(__dirname + "/../../what-to-see-client/build"));
 app.use("/api", routes);
 
 app.get("/", (req, res) => {

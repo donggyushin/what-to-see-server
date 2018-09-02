@@ -178,7 +178,30 @@ router.post("/", upload.array(), (req, res) => {
 //logout
 router.get("/logout", (req, res) => {
   req.logOut();
-  res.redirect("/");
+  return res.json({
+    ok: true,
+    error: null,
+    status: 200
+  });
+});
+
+//유저가 로그인했는지 안했는지 확인하기
+router.get("/check", (req, res) => {
+  if (req.isAuthenticated()) {
+    const user = req.user;
+    return res.json({
+      ok: true,
+      error: null,
+      status: 200,
+      user
+    });
+  }
+
+  return res.json({
+    ok: false,
+    error: "not logined",
+    status: 404
+  });
 });
 
 export default router;

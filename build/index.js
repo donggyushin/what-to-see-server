@@ -32,6 +32,8 @@ var _passport = require("passport");
 
 var _passport2 = _interopRequireDefault(_passport);
 
+var _path = require("path");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var MySQLStore = require("express-mysql-session")(_expressSession2.default);
@@ -60,6 +62,7 @@ app.use(_passport2.default.initialize());
 app.use(_passport2.default.session());
 
 //router
+app.use("/", _express2.default.static(__dirname + "/../../what-to-see-client/build"));
 app.use("/api", _routes2.default);
 
 app.get("/", function (req, res) {

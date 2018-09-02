@@ -20,6 +20,10 @@ var _sha = require("sha256");
 
 var _sha2 = _interopRequireDefault(_sha);
 
+var _dotenv = require("dotenv");
+
+var _dotenv2 = _interopRequireDefault(_dotenv);
+
 var _passport = require("passport");
 
 var _passport2 = _interopRequireDefault(_passport);
@@ -30,7 +34,11 @@ var _passportLocal2 = _interopRequireDefault(_passportLocal);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+_dotenv2.default.config();
+
 //passport.js import
+
+var FacebookStrategy = require("passport-facebook").Strategy;
 
 var router = _express2.default.Router();
 var upload = (0, _multer2.default)();
@@ -55,6 +63,51 @@ _passport2.default.deserializeUser(function (id, done) {
 });
 
 //passport.js 로그인
+
+_passport2.default.use(new FacebookStrategy({
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_SECRET_KEY,
+  callbackURL: "/api/auth/facebook/callback"
+}, function (accessToken, refreshToken, profile, done) {
+  console.log(profile);
+  var username = "facebook:" + profile.id;
+  var displayName = profile.displayName;
+  //이미 존재하는지 확인하기,
+  var sql = "SELECT * FROM user WHERE username = ?";
+  var post = [username];
+  _mysql2.default.query(sql, post, function (err, results, fields) {
+    if (err) {
+      console.log(err);
+      return done(err);
+    }
+    //이미 존재한다면
+    if (results.length !== 0) {
+      //바로 로그인 시켜주기
+      var user = results[0];
+      return done(null, user);
+    } else {
+      //존재하지 않는다면, 회원가입시켜주고, 로그인 시켜주기.
+      var _sql = "INSERT INTO user (username, password, displayName) VALUES(?,?,?)";
+      var _post = [username, "facebook", displayName];
+      _mysql2.default.query(_sql, _post, function (err, results, fields) {
+        if (err) {
+          console.log(err);
+          return done(err);
+        }
+        var sql = "SELECT * FROM user WHERE username = ?";
+        var post = [username];
+        _mysql2.default.query(sql, post, function (err, results, fields) {
+          if (err) {
+            console.log(err);
+            return done(err);
+          }
+          var user = results[0];
+          return done(null, user);
+        });
+      });
+    }
+  });
+}));
 
 _passport2.default.use(new _passportLocal2.default(function (username, password, done) {
   //유저찾기
@@ -84,59 +137,27 @@ _passport2.default.use(new _passportLocal2.default(function (username, password,
   });
 }));
 
-router.post("/login/", upload.array(), _passport2.default.authenticate("local", {
+// Redirect the user to Facebook for authentication.  When complete,
+// Facebook will redirect the user back to the application at
+//     /auth/facebook/callback
+
+router.get("/facebook", _passport2.default.authenticate("facebook"));
+
+// Facebook will redirect the user to this URL after approval.  Finish the
+// authentication process by attempting to obtain an access token.  If
+// access was granted, the user will be logged in.  Otherwise,
+// authentication has failed.
+
+router.get("/facebook/callback", _passport2.default.authenticate("facebook", {
+  successRedirect: "/",
+  failureRedirect: "/"
+}));
+
+router.post("/login", upload.array(), _passport2.default.authenticate("local", {
   successRedirect: "/",
   failureRedirect: "/",
   failureFlash: true
 }));
-
-//로그인(test)
-// router.post("/login/", upload.array(), (req, res) => {
-//   const username = req.body.username;
-//   const password = req.body.password;
-//   const EncryptedPassword = sha256.x2(password);
-
-//   //username으로 유저찾기
-//   const sql = "SELECT password FROM user WHERE username = ?";
-//   const post = [username];
-
-//   mysql.query(sql, post, (err, results, fields) => {
-//     if (err) {
-//       console.log(err);
-//       return res.json({
-//         ok: false,
-//         error: "db error",
-//         status: 400
-//       });
-//     } else {
-//       //유저가 없다면,
-//       if (results.length === 0) {
-//         return res.json({
-//           ok: false,
-//           error: "no user",
-//           status: 400
-//         });
-//       }
-//       //유저가 존재한다면,
-//       const users_password = results[0].password;
-//       //비밀번호가 일치하지 않는다면,
-//       if (users_password !== EncryptedPassword) {
-//         return res.json({
-//           ok: false,
-//           error: "wrong password",
-//           status: 400
-//         });
-//       } else {
-//         //성공
-//         return res.json({
-//           ok: true,
-//           error: null,
-//           status: 200
-//         });
-//       }
-//     }
-//   });
-// });
 
 //회원가입
 router.post("/", upload.array(), function (req, res) {
@@ -163,6 +184,35 @@ router.post("/", upload.array(), function (req, res) {
         error: null
       });
     }
+  });
+});
+
+//logout
+router.get("/logout", function (req, res) {
+  req.logOut();
+  return res.json({
+    ok: true,
+    error: null,
+    status: 200
+  });
+});
+
+//유저가 로그인했는지 안했는지 확인하기
+router.get("/check", function (req, res) {
+  if (req.isAuthenticated()) {
+    var user = req.user;
+    return res.json({
+      ok: true,
+      error: null,
+      status: 200,
+      user: user
+    });
+  }
+
+  return res.json({
+    ok: false,
+    error: "not logined",
+    status: 404
   });
 });
 
