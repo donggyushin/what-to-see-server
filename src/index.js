@@ -8,6 +8,7 @@ import storeOption from "./options/mysqlstoreopts";
 import dotenv from "dotenv";
 import passport from "passport";
 import { dirname } from "path";
+import flash from "connect-flash";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(flash());
 
 //router
 app.use("/", express.static(__dirname + "/../../what-to-see-client/build"));

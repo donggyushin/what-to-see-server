@@ -34,6 +34,10 @@ var _passport2 = _interopRequireDefault(_passport);
 
 var _path = require("path");
 
+var _connectFlash = require("connect-flash");
+
+var _connectFlash2 = _interopRequireDefault(_connectFlash);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var MySQLStore = require("express-mysql-session")(_expressSession2.default);
@@ -60,6 +64,7 @@ app.use((0, _expressSession2.default)({
 }));
 app.use(_passport2.default.initialize());
 app.use(_passport2.default.session());
+app.use((0, _connectFlash2.default)());
 
 //router
 app.use("/", _express2.default.static(__dirname + "/../../what-to-see-client/build"));

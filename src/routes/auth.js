@@ -141,10 +141,18 @@ router.post(
   upload.array(),
   passport.authenticate("local", {
     successRedirect: "/",
-    failureRedirect: "/",
+    failureRedirect: "/api/auth/fail",
     failureFlash: true
   })
 );
+
+router.get("/fail", (req, res) => {
+  return res.json({
+    ok: false,
+    status: 404,
+    error: "wrong access, please check your username and password again"
+  });
+});
 
 //회원가입
 router.post("/", upload.array(), (req, res) => {

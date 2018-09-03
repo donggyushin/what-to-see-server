@@ -155,9 +155,17 @@ router.get("/facebook/callback", _passport2.default.authenticate("facebook", {
 
 router.post("/login", upload.array(), _passport2.default.authenticate("local", {
   successRedirect: "/",
-  failureRedirect: "/",
+  failureRedirect: "/api/auth/fail",
   failureFlash: true
 }));
+
+router.get("/fail", function (req, res) {
+  return res.json({
+    ok: false,
+    status: 404,
+    error: "wrong access, please check your username and password again"
+  });
+});
 
 //회원가입
 router.post("/", upload.array(), function (req, res) {
