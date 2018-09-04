@@ -4,11 +4,7 @@ const router = express.Router();
 const upload = multer();
 
 router.get("/", (req, res) => {
-  return res.json({
-    ok: true,
-    error: null,
-    status: 200
-  });
+  return res.render("test");
 });
 
 router.post("/", upload.array(), (req, res) => {

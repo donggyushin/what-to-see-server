@@ -44,6 +44,7 @@ passport.use(
       callbackURL: "/api/auth/facebook/callback"
     },
     (accessToken, refreshToken, profile, done) => {
+      console.log("FacebookStrategy");
       console.log(profile);
       const username = "facebook:" + profile.id;
       const displayName = profile.displayName;
@@ -90,6 +91,7 @@ passport.use(
 passport.use(
   new LocalStrategy((username, password, done) => {
     //유저찾기
+    console.log("LocalStrategy");
     const EncryptedPassword = sha256.x2(password);
     const sql = "SELECT * FROM user WHERE username=?";
     const post = [username];
@@ -131,10 +133,27 @@ router.get("/facebook", passport.authenticate("facebook"));
 router.get(
   "/facebook/callback",
   passport.authenticate("facebook", {
-    successRedirect: "/",
-    failureRedirect: "/"
+    successRedirect: "/api/auth/facebooksuccess",
+    failureRedirect: "/api/auth/facebookfail"
   })
 );
+
+router.get("/facebooksuccess", (req, res) => {
+  return res.json({
+    ok: false,
+    status: 200,
+    error: null
+  });
+});
+
+router.get("/facebookfail", (req, res) => {
+  return res.json({
+    ok: false,
+    status: 404,
+    error:
+      "Sorry, fail to access your account with your facebook account. Maybe you should check your facebook username and password right."
+  });
+});
 
 router.post(
   "/login",
@@ -161,6 +180,30 @@ router.post("/", upload.array(), (req, res) => {
   const displayName = req.body.displayName;
   const EncryptedPassword = sha256.x2(password);
 
+  if (username === "" || username == null) {
+    return res.json({
+      ok: false,
+      status: 400,
+      error: "You should input username"
+    });
+  }
+
+  if (password === "" || password == null) {
+    return res.json({
+      ok: false,
+      status: 400,
+      error: "You should input password"
+    });
+  }
+
+  if (displayName === "" || displayName == null) {
+    return res.json({
+      ok: false,
+      status: 400,
+      error: "You should input displayName"
+    });
+  }
+
   const sql =
     "INSERT INTO user (username, password, displayName) VALUES (?,?,?)";
   const post = [username, EncryptedPassword, displayName];
@@ -174,11 +217,31 @@ router.post("/", upload.array(), (req, res) => {
         error: "There is username or displayName already"
       });
     } else {
-      return res.json({
-        ok: true,
-        status: 200,
-        error: null
+      const sql = "SELECT * FROM user WHERE username =? ";
+      const post = [username];
+      mysql.query(sql, post, (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return res.json({
+            ok: false,
+            status: 400,
+            error: "db error"
+          });
+        }
+        const user = results[0];
+        req.logIn(user, err => {
+          if (err) {
+            console.log(err);
+          }
+          return res.redirect("/");
+        });
       });
+
+      // return res.json({
+      //   ok: true,
+      //   status: 200,
+      //   error: null
+      // });
     }
   });
 });
@@ -195,6 +258,8 @@ router.get("/logout", (req, res) => {
 
 //유저가 로그인했는지 안했는지 확인하기
 router.get("/check", (req, res) => {
+  console.log("api/auth/check");
+  req.logOut();
   if (req.isAuthenticated()) {
     const user = req.user;
     return res.json({

@@ -4,6 +4,10 @@ var _express = require("express");
 
 var _express2 = _interopRequireDefault(_express);
 
+var _cors = require("cors");
+
+var _cors2 = _interopRequireDefault(_cors);
+
 var _bodyParser = require("body-parser");
 
 var _bodyParser2 = _interopRequireDefault(_bodyParser);
@@ -11,10 +15,6 @@ var _bodyParser2 = _interopRequireDefault(_bodyParser);
 var _routes = require("./routes");
 
 var _routes2 = _interopRequireDefault(_routes);
-
-var _mysql = require("./db/mysql");
-
-var _mysql2 = _interopRequireDefault(_mysql);
 
 var _expressSession = require("express-session");
 
@@ -31,8 +31,6 @@ var _dotenv2 = _interopRequireDefault(_dotenv);
 var _passport = require("passport");
 
 var _passport2 = _interopRequireDefault(_passport);
-
-var _path = require("path");
 
 var _connectFlash = require("connect-flash");
 
@@ -65,10 +63,15 @@ app.use((0, _expressSession2.default)({
 app.use(_passport2.default.initialize());
 app.use(_passport2.default.session());
 app.use((0, _connectFlash2.default)());
+app.use((0, _cors2.default)());
 
 //router
 app.use("/", _express2.default.static(__dirname + "/../../what-to-see-client/build"));
 app.use("/api", _routes2.default);
+
+//template engine
+app.set("view engine", "ejs");
+app.set("views", "./views");
 
 app.get("/", function (req, res) {
   if (req.isAuthenticated()) {

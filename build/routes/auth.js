@@ -69,6 +69,7 @@ _passport2.default.use(new FacebookStrategy({
   clientSecret: process.env.FACEBOOK_SECRET_KEY,
   callbackURL: "/api/auth/facebook/callback"
 }, function (accessToken, refreshToken, profile, done) {
+  console.log("FacebookStrategy");
   console.log(profile);
   var username = "facebook:" + profile.id;
   var displayName = profile.displayName;
@@ -111,6 +112,7 @@ _passport2.default.use(new FacebookStrategy({
 
 _passport2.default.use(new _passportLocal2.default(function (username, password, done) {
   //유저찾기
+  console.log("LocalStrategy");
   var EncryptedPassword = _sha2.default.x2(password);
   var sql = "SELECT * FROM user WHERE username=?";
   var post = [username];
@@ -149,9 +151,25 @@ router.get("/facebook", _passport2.default.authenticate("facebook"));
 // authentication has failed.
 
 router.get("/facebook/callback", _passport2.default.authenticate("facebook", {
-  successRedirect: "/",
-  failureRedirect: "/"
+  successRedirect: "/api/auth/facebooksuccess",
+  failureRedirect: "/api/auth/facebookfail"
 }));
+
+router.get("/facebooksuccess", function (req, res) {
+  return res.json({
+    ok: false,
+    status: 200,
+    error: null
+  });
+});
+
+router.get("/facebookfail", function (req, res) {
+  return res.json({
+    ok: false,
+    status: 404,
+    error: "Sorry, fail to access your account with your facebook account. Maybe you should check your facebook username and password right."
+  });
+});
 
 router.post("/login", upload.array(), _passport2.default.authenticate("local", {
   successRedirect: "/",
@@ -174,6 +192,30 @@ router.post("/", upload.array(), function (req, res) {
   var displayName = req.body.displayName;
   var EncryptedPassword = _sha2.default.x2(password);
 
+  if (username === "" || username == null) {
+    return res.json({
+      ok: false,
+      status: 400,
+      error: "You should input username"
+    });
+  }
+
+  if (password === "" || password == null) {
+    return res.json({
+      ok: false,
+      status: 400,
+      error: "You should input password"
+    });
+  }
+
+  if (displayName === "" || displayName == null) {
+    return res.json({
+      ok: false,
+      status: 400,
+      error: "You should input displayName"
+    });
+  }
+
   var sql = "INSERT INTO user (username, password, displayName) VALUES (?,?,?)";
   var post = [username, EncryptedPassword, displayName];
 
@@ -186,11 +228,31 @@ router.post("/", upload.array(), function (req, res) {
         error: "There is username or displayName already"
       });
     } else {
-      return res.json({
-        ok: true,
-        status: 200,
-        error: null
+      var _sql2 = "SELECT * FROM user WHERE username =? ";
+      var _post2 = [username];
+      _mysql2.default.query(_sql2, _post2, function (err, results, fields) {
+        if (err) {
+          console.log(err);
+          return res.json({
+            ok: false,
+            status: 400,
+            error: "db error"
+          });
+        }
+        var user = results[0];
+        req.logIn(user, function (err) {
+          if (err) {
+            console.log(err);
+          }
+          return res.redirect("/");
+        });
       });
+
+      // return res.json({
+      //   ok: true,
+      //   status: 200,
+      //   error: null
+      // });
     }
   });
 });
@@ -207,6 +269,8 @@ router.get("/logout", function (req, res) {
 
 //유저가 로그인했는지 안했는지 확인하기
 router.get("/check", function (req, res) {
+  console.log("api/auth/check");
+  req.logOut();
   if (req.isAuthenticated()) {
     var user = req.user;
     return res.json({

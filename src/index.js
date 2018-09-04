@@ -1,13 +1,12 @@
 import express from "express";
+import cors from "cors";
 import bodyParser from "body-parser";
 import routes from "./routes";
-import mysql from "./db/mysql";
 import session from "express-session";
 var MySQLStore = require("express-mysql-session")(session);
 import storeOption from "./options/mysqlstoreopts";
 import dotenv from "dotenv";
 import passport from "passport";
-import { dirname } from "path";
 import flash from "connect-flash";
 
 dotenv.config();
@@ -34,10 +33,15 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
+app.use(cors());
 
 //router
 app.use("/", express.static(__dirname + "/../../what-to-see-client/build"));
 app.use("/api", routes);
+
+//template engine
+app.set("view engine", "ejs");
+app.set("views", "./views");
 
 app.get("/", (req, res) => {
   if (req.isAuthenticated()) {
