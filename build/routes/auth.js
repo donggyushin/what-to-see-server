@@ -269,8 +269,7 @@ router.get("/logout", function (req, res) {
 
 //유저가 로그인했는지 안했는지 확인하기
 router.get("/check", function (req, res) {
-  console.log("api/auth/check");
-  req.logOut();
+
   if (req.isAuthenticated()) {
     var user = req.user;
     return res.json({
