@@ -34,7 +34,7 @@ router.get("/reply/:commentId", (req, res) => {
 router.get("/:movieId", (req, res) => {
   const movie_id = req.params.movieId;
 
-  const sql = `SELECT c.id, u.displayName, c.message FROM comment c JOIN user u ON c.writer = u.id WHERE movie=?`;
+  const sql = `SELECT c.id AS id, u.displayName AS username, c.message AS message FROM comment c JOIN user u ON c.writer = u.id WHERE movie=?`;
   const post = [movie_id];
   mysql.query(sql, post, (err, results, fields) => {
     if (err) {
