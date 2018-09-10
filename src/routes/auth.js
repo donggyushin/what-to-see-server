@@ -41,7 +41,7 @@ passport.use(
     {
       clientID: process.env.FACEBOOK_APP_ID,
       clientSecret: process.env.FACEBOOK_SECRET_KEY,
-      callbackURL: "/api/auth/facebook/callback"
+      callbackURL: "http://localhost:8081/api/auth/facebook/callback"
     },
     (accessToken, refreshToken, profile, done) => {
       console.log("FacebookStrategy");
@@ -258,7 +258,6 @@ router.get("/logout", (req, res) => {
 
 //유저가 로그인했는지 안했는지 확인하기
 router.get("/check", (req, res) => {
-  
   if (req.isAuthenticated()) {
     const user = req.user;
     return res.json({
