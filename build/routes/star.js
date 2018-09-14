@@ -60,6 +60,38 @@ router.post("/:movieId", upload.array(), function (req, res) {
   var movieId = req.params.movieId;
   var score = parseInt(req.body.score);
 
+  //만약 이미 평점을 매긴적이 있다면, 기존의 평점들을 모두 지워주자.
+
+  var sql2 = "SELECT * FROM star WHERE movie = ? AND writer = ?";
+  var post2 = [movieId, writer];
+
+  _mysql2.default.query(sql2, post2, function (err, results, fields) {
+    if (err) {
+      console.log(err);
+      return res.json({
+        ok: false,
+        status: 400,
+        error: "db error"
+      });
+    }
+
+    if (results.length !== 0) {
+      //만약에 결과값이 존재한다면,
+      var _sql = "DELETE FROM star WHERE movie = ? AND writer = ?";
+      var _post = [movieId, writer];
+      _mysql2.default.query(_sql, _post, function (err, results, fields) {
+        if (err) {
+          console.log(err);
+          return res.json({
+            ok: false,
+            status: 400,
+            error: "db error"
+          });
+        }
+      });
+    }
+  });
+
   var sql = "INSERT INTO star(writer, score, movie) VALUES (?,?,?)";
   var post = [writer, score, movieId];
 

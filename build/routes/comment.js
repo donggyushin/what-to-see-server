@@ -54,7 +54,7 @@ router.get("/reply/:commentId", function (req, res) {
 router.get("/:movieId", function (req, res) {
   var movie_id = req.params.movieId;
 
-  var sql = "SELECT c.id, u.displayName, c.message FROM comment c JOIN user u ON c.writer = u.id WHERE movie=?";
+  var sql = "SELECT c.id AS id, u.displayName AS username, c.message AS message FROM comment c JOIN user u ON c.writer = u.id WHERE movie=?";
   var post = [movie_id];
   _mysql2.default.query(sql, post, function (err, results, fields) {
     if (err) {

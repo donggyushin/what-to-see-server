@@ -67,7 +67,7 @@ _passport2.default.deserializeUser(function (id, done) {
 _passport2.default.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_SECRET_KEY,
-  callbackURL: "/api/auth/facebook/callback"
+  callbackURL: "http://localhost:8081/api/auth/facebook/callback"
 }, function (accessToken, refreshToken, profile, done) {
   console.log("FacebookStrategy");
   console.log(profile);
@@ -269,7 +269,6 @@ router.get("/logout", function (req, res) {
 
 //유저가 로그인했는지 안했는지 확인하기
 router.get("/check", function (req, res) {
-
   if (req.isAuthenticated()) {
     var user = req.user;
     return res.json({
