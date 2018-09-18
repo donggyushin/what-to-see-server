@@ -38,18 +38,20 @@ router.get("/:movieId", (req, res) => {
   });
 });
 
-router.post("/:movieId", upload.array(), (req, res) => {
+router.post("/:movieId", upload.array(), async (req, res) => {
   const user = req.user;
   const writer = user.id;
   const movieId = req.params.movieId;
   const score = parseInt(req.body.score);
+
+  console.log("1");
 
   //만약 이미 평점을 매긴적이 있다면, 기존의 평점들을 모두 지워주자.
 
   const sql2 = "SELECT * FROM star WHERE movie = ? AND writer = ?";
   const post2 = [movieId, writer];
 
-  mysql.query(sql2, post2, (err, results, fields) => {
+  await mysql.query(sql2, post2, (err, results, fields) => {
     if (err) {
       console.log(err);
       return res.json({
@@ -61,6 +63,7 @@ router.post("/:movieId", upload.array(), (req, res) => {
 
     if (results.length !== 0) {
       //만약에 결과값이 존재한다면,
+      console.log("2");
       const sql = "DELETE FROM star WHERE movie = ? AND writer = ?";
       const post = [movieId, writer];
       mysql.query(sql, post, (err, results, fields) => {
@@ -72,29 +75,59 @@ router.post("/:movieId", upload.array(), (req, res) => {
             error: "db error"
           });
         }
+        return res.json({
+          ok: false,
+          status: 200,
+          error:
+            "이미 평점을 매기셨습니다. 기존에 남겨주신 평점이 삭제되었습니다. "
+        });
+      });
+    } else {
+      console.log("3");
+
+      const sql = "INSERT INTO star(writer, score, movie) VALUES (?,?,?)";
+      const post = [writer, score, movieId];
+
+      mysql.query(sql, post, (err, results, fields) => {
+        if (err) {
+          console.log(err);
+          return res.json({
+            ok: false,
+            status: 400,
+            error: "db error"
+          });
+        }
+
+        return res.json({
+          ok: true,
+          status: 200,
+          error: null
+        });
       });
     }
   });
 
-  const sql = "INSERT INTO star(writer, score, movie) VALUES (?,?,?)";
-  const post = [writer, score, movieId];
+  // console.log("3");
 
-  mysql.query(sql, post, (err, results, fields) => {
-    if (err) {
-      console.log(err);
-      return res.json({
-        ok: false,
-        status: 400,
-        error: "db error"
-      });
-    }
+  // const sql = "INSERT INTO star(writer, score, movie) VALUES (?,?,?)";
+  // const post = [writer, score, movieId];
 
-    return res.json({
-      ok: true,
-      status: 200,
-      error: null
-    });
-  });
+  // mysql.query(sql, post, (err, results, fields) => {
+  //   if (err) {
+  //     console.log(err);
+  //     return res.json({
+  //       ok: false,
+  //       status: 400,
+  //       error: "db error"
+  //     });
+  //   }
+
+  //   return res.json({
+  //     ok: true,
+  //     status: 200,
+  //     error: null
+  //   });
+  // });
 });
 
 export default router;
